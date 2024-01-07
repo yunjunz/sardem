@@ -1,4 +1,5 @@
 import logging
+import os
 from copy import deepcopy
 
 import requests
@@ -43,7 +44,8 @@ def download_and_stitch(
     #         make_cop_vrt(vrt_filename)
     # else:
     if vrt_filename is None:
-        vrt_filename = "/vsicurl/https://raw.githubusercontent.com/scottstanie/sardem/master/sardem/data/cop_global.vrt"  # noqa
+        #vrt_filename = "/vsicurl/https://raw.githubusercontent.com/scottstanie/sardem/master/sardem/data/cop_global.vrt"  # noqa
+        vrt_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/cop_global.vrt")
 
     if keep_egm:
         t_srs = s_srs = None
