@@ -288,6 +288,7 @@ def _float_is_on_bounds(x):
 def main(
     output_name=None,
     bbox=None,
+    snwe=None,
     geojson=None,
     wkt_file=None,
     data_source=None,
@@ -306,6 +307,8 @@ def main(
         output_name (str): name of file to save final DEM (default = elevation.dem)
         bbox (tuple[float]): (left, bot, right, top)
             Longitude/latitude desired bounding box for the DEM
+        snwe (tuple[float]): (south, north, west, east) (alternative to bbox)
+            Latitude/longitude desired bounding box for the DEM
         geojson (dict): geojson object outlining DEM (alternative to bbox)
         wkt_file (str): path to .wkt file outlining DEM (alternative to bbox)
         data_source (str): 'NASA' or 'AWS', where to download .hgt tiles from
@@ -327,9 +330,11 @@ def main(
             bbox = utils.bounding_box(geojson=geojson)
         elif wkt_file:
             bbox = utils.get_wkt_bbox(wkt_file)
+        elif snwe:
+            bbox = (snwe[2], snwe[0], snwe[3], snwe[1])
 
     if bbox is None:
-        raise ValueError("Must provide either bbox or geojson or wkt_file")
+        raise ValueError("Must provide either bbox or snwe or geojson or wkt_file")
     logger.info("Bounds: %s", " ".join(str(b) for b in bbox))
 
     # if all(_float_is_on_bounds(b) for b in bbox):

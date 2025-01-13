@@ -33,13 +33,13 @@ DESCRIPTION = """Stiches SRTM .hgt files to make (upsampled) DEM
     I.e. (left, bottom) refers to the lower left corner of the lower left pixel.
 
     Usage Examples:
-        sardem --bbox -156 18.8 -154.7 20.3  # bounding box: [left  bottom  right top]
-        sardem -156.0 20.2 1 2 --xrate 2 --yrate 2  # Makes a box 1 degree wide, 2 deg high
-        sardem --bbox -156 18.8 -154.7 20.3 --data-source COP  # Copernicus DEM
-        sardem --geojson dem_area.geojson -x 11 -y 3 # Use geojson file to define area
+        sardem --bbox -156 18.8 -154.7 20.3                     # bounding box: [left  bottom  right top]
+        sardem --snwe 18.8 20.3 -156 -154.7                     # SNWE
+        sardem -156.0 20.2 1 2 --xrate 2 --yrate 2              # Makes a box 1 degree wide, 2 deg high
+        sardem --bbox -156 18.8 -154.7 20.3 --data-source COP   # Copernicus DEM
+        sardem --geojson dem_area.geojson -x 11 -y 3            # Use geojson file to define area
         sardem --bbox -156 18.8 -154.7 20.3 --data-source NASA_WATER -o my_watermask.wbd # Water mask
-        sardem --bbox -156 18.8 -154.7 20.3 --data COP -isce  # Generate .isce XML files as well
-
+        sardem --bbox -156 18.8 -154.7 20.3 --data COP -isce    # Generate .isce XML files as well
 
     Default out is elevation.dem for the final upsampled DEM.
     Also creates elevation.dem.rsc with start lat/lon, stride, and other info."""
@@ -77,6 +77,16 @@ def get_cli_args():
         help="Bounding box of area of interest "
         " (e.g. --bbox -106.1 30.1 -103.1 33.1 ). \n"
         "--bbox points to the *edges* of the pixels, \n"
+        " following the 'pixel is area' convention as used in gdal. ",
+    )
+    parser.add_argument(
+        "--snwe",
+        nargs=4,
+        metavar=("south", "north", "west", "east"),
+        type=float,
+        help="Bounding box of area of interest "
+        " (e.g. --snwe 32 33 102 103 ). \n"
+        "--snwe points to the *edges* of the pixels, \n"
         " following the 'pixel is area' convention as used in gdal. ",
     )
     parser.add_argument(
@@ -182,11 +192,12 @@ def cli():
     # Need all 4 positionals, or the --geosjon
     elif (
         any(a is None for a in (args.left_lon, args.top_lat, args.dlon, args.dlat))
-        and not args.geojson
         and not args.bbox
+        and not args.snwe
+        and not args.geojson
         and not args.wkt_file
     ):
-        raise ValueError("Need --bbox, --geojson, or --wkt-file")
+        raise ValueError("Need --bbox, --snwe, --geojson, or --wkt-file")
 
     geojson_dict = json.load(args.geojson) if args.geojson else None
     if args.left_lon:
@@ -212,6 +223,7 @@ def cli():
     sardem.dem.main(
         output_name=output,
         bbox=bbox,
+        snwe=args.snwe,
         geojson=geojson_dict,
         wkt_file=args.wkt_file,
         data_source=args.data_source,
